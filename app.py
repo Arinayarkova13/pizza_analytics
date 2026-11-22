@@ -22,8 +22,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Настройка верхнего отступа основной области
-# Настройка внешнего вида основной области
+# Настройка внешнего вида и верхнего отступа основной области
 st.markdown(
     """
     <style>
@@ -88,7 +87,6 @@ date_range = st.sidebar.date_input(
 )
 
 
-# Доступные категории и размеры
 # Доступные категории и размеры
 all_categories = sorted(df["category"].unique())
 all_sizes = ["S", "M", "L", "XL", "XXL"]

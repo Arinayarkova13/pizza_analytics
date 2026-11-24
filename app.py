@@ -2,7 +2,7 @@
 import streamlit as st
 
 from utils.data_loader import get_data
-from utils.analytics import filter_data, calculate_metrics
+from utils.analytics import filter_data, calculate_metrics, find_most_profitable_day
 from utils.charts import (
     CATEGORIES,
     monthly_sales_chart,
@@ -152,9 +152,13 @@ if filtered_df.empty:
 # Расчет ключевых показателей
 metrics = calculate_metrics(filtered_df)
 
+# Находим самый прибыльный день
+best_day = find_most_profitable_day(filtered_df)
+
 st.header("Ключевые показатели")
 
-col1, col2, col3, col4 = st.columns(4)
+# Изменили 4 колонки на 5
+col1, col2, col3, col4, col5 = st.columns(5) 
 
 col1.metric(
     "Общая выручка",
@@ -175,7 +179,16 @@ col4.metric(
     "Средний чек",
     f"${metrics['average_check']:,.2f}",
 )
-
+if best_day is not None:
+    col5.metric(
+        "Самый прибыльный день",
+        f"День {int(best_day)}"
+    )
+else:
+    col5.metric(
+        "Самый прибыльный день",
+        "Нет данных"
+    )
 st.divider()
 
 

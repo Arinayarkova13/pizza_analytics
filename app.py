@@ -204,7 +204,7 @@ col1.metric(
 if best_day is not None:
     col2.metric(
         "Самый прибыльный день",
-        f"День {int(best_day)}",
+        ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][int(best_day)],
     )
 else:
     col2.metric(

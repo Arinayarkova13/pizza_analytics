@@ -2,7 +2,7 @@
 import streamlit as st
 
 from utils.data_loader import get_data
-from utils.analytics import filter_data, calculate_metrics
+from utils.analytics import filter_data, calculate_metrics, find_most_profitable_day
 from utils.charts import (
     CATEGORIES,
     monthly_sales_chart,
@@ -155,8 +155,12 @@ if filtered_df.empty:
 # Расчет ключевых показателей
 metrics = calculate_metrics(filtered_df, start_date, end_date)
 
+# Находим самый прибыльный день
+best_day = find_most_profitable_day(filtered_df)
+
 st.header("Ключевые показатели")
 
+# Первый ряд показателей
 col1, col2, col3 = st.columns(3)
 
 col1.metric(
@@ -174,22 +178,39 @@ col3.metric(
     f"{metrics['pizzas']:,}",
 )
 
-col1, col2, col3 = st.columns(3)
+# Второй ряд показателей
+col1, col2 = st.columns(2)
 
 col1.metric(
     "Средний чек",
     f"${metrics['average_check']:,.2f}",
 )
+
 col2.metric(
     "Средняя дневная выручка",
     f"${metrics['average_daily_revenue']:,.2f}",
     help="Выручка за выбранный период, деленная на число календарных дней.",
 )
-col3.metric(
+
+# Третий ряд показателей
+col1, col2 = st.columns(2)
+
+col1.metric(
     "Среднее количество пицц в заказе",
     f"{metrics['average_pizzas_per_order']:,.2f}",
     help="Количество пицц по выбранным фильтрам, деленное на число заказов.",
 )
+
+if best_day is not None:
+    col2.metric(
+        "Самый прибыльный день",
+        f"День {int(best_day)}",
+    )
+else:
+    col2.metric(
+        "Самый прибыльный день",
+        "Нет данных",
+    )
 
 st.divider()
 

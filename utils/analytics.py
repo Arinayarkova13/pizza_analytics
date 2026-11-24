@@ -121,3 +121,13 @@ def pizzas_by_category(df):
 def sales_by_size(df):
     """Рассчитывает количество проданных пицц по размерам."""
     return df.groupby("size")["quantity"].sum().reset_index()
+
+def find_most_profitable_day(df):
+    """Находит день недели с самой большой выручкой из DataFrame."""
+    if df.empty:
+        return None
+    #группируем по дню недели и считаем сумму выручки
+    revenue_by_day = df.groupby("day_of_week")["revenue"].sum()
+    #находим день с максимальной выручкой
+    return revenue_by_day.idxmax()
+

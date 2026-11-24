@@ -14,6 +14,7 @@ from utils.analytics import (
     unpopular_pizzas,
     sales_by_category,
     sales_by_size,
+     find_most_profitable_day,
 )
 
 
@@ -189,3 +190,23 @@ def test_sales_by_size(sample_data):
         "M": 5,
         "S": 1,
     }
+
+def test_find_most_profitable_day_correct(sample_data):
+    """Проверяет, что функция находит день с максимальной выручкой."""
+    # В sample_data: день 3 (сумма 40), день 4 (сумма 30), день 6 (сумма 15). 
+    # Максимум у дня 3.
+    assert find_most_profitable_day(sample_data) == 3
+
+def test_find_most_profitable_day_empty():
+    """Проверяет работу с пустым DataFrame."""
+    empty_df = pd.DataFrame(columns=["day_of_week", "revenue"])
+    assert find_most_profitable_day(empty_df) is None
+
+def test_find_most_profitable_day_tie():
+    """Проверяет сценарий с одинаковой максимальной выручкой."""
+    df = pd.DataFrame({
+        "day_of_week": [1, 2], 
+        "revenue": [10000, 10000]
+    })
+    result = find_most_profitable_day(df)
+    assert result in [1, 2]

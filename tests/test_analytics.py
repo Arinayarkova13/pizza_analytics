@@ -5,9 +5,11 @@ import pytest
 from utils.analytics import (
     filter_data,
     calculate_metrics,
+    sales_by_day,
     sales_by_month,
     orders_by_hour,
     orders_by_weekday,
+    orders_by_weekday_and_hour,
     popular_pizzas,
     unpopular_pizzas,
     sales_by_category,
@@ -46,12 +48,14 @@ def sample_data():
 def test_calculate_metrics(sample_data):
     """Проверяет расчет основных показателей."""
 
-    result = calculate_metrics(sample_data)
+    result = calculate_metrics(sample_data, "2015-01-01", "2015-02-02")
 
     assert result["revenue"] == 85
     assert result["orders"] == 3
     assert result["pizzas"] == 7
     assert result["average_check"] == 28.33
+    assert result["average_daily_revenue"] == 2.58
+    assert result["average_pizzas_per_order"] == 2.33
 
 
 def test_empty_data(sample_data):
@@ -64,6 +68,8 @@ def test_empty_data(sample_data):
     assert result["orders"] == 0
     assert result["pizzas"] == 0
     assert result["average_check"] == 0
+    assert result["average_daily_revenue"] == 0
+    assert result["average_pizzas_per_order"] == 0
 
 
 def test_filter_data(sample_data):
@@ -95,6 +101,13 @@ def test_filter_no_results(sample_data):
     assert result.empty
 
 
+def test_sales_by_day(sample_data):
+    """Проверяет суммирование продаж и заполнение дней без продаж."""
+    result = sales_by_day(sample_data, "2015-01-01", "2015-01-03")
+    assert result["date"].tolist() == list(pd.date_range("2015-01-01", periods=3))
+    assert result["revenue"].tolist() == [40, 30, 0]
+
+
 def test_sales_by_month(sample_data):
     """Проверяет расчет выручки по месяцам."""
 
@@ -120,6 +133,16 @@ def test_orders_by_weekday(sample_data):
 
     assert result["day_of_week"].tolist() == [3, 4, 6]
     assert result["order_id"].tolist() == [1, 1, 1]
+
+
+def test_orders_by_weekday_and_hour(sample_data):
+    """Проверяет подсчет уникальных заказов в каждой паре дня и часа."""
+    result = orders_by_weekday_and_hour(sample_data)
+    assert list(result.itertuples(index=False, name=None)) == [
+        (3, 12, 1),
+        (4, 15, 1),
+        (6, 18, 1),
+    ]
 
 
 def test_popular_pizzas(sample_data):

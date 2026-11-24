@@ -2,12 +2,15 @@
 import plotly.express as px
 
 from utils.analytics import (
+    sales_by_day,
     sales_by_month,
     orders_by_hour,
     orders_by_weekday,
+    orders_by_weekday_and_hour,
     popular_pizzas,
     unpopular_pizzas,
     sales_by_category,
+    pizzas_by_category,
     sales_by_size,
 )
 
@@ -71,6 +74,29 @@ def monthly_sales_chart(df):
     return fig
 
 
+def daily_sales_chart(df, start_date, end_date):
+    """Строит график выручки по дням."""
+
+    data = sales_by_day(df, start_date, end_date)
+    fig = px.line(
+        data,
+        x="date",
+        y="revenue",
+        markers=True,
+        title="Динамика выручки по дням",
+        labels={
+            "date": "Дата",
+            "revenue": "Выручка, $",
+        },
+    )
+
+    fig.update_traces(line_color="#3B82F6", marker_size=4)
+    fig.update_xaxes(tickformat="%d.%m.%Y", hoverformat="%d.%m.%Y")
+    fig.update_yaxes(hoverformat=".2f")
+
+    return fig
+
+
 def hourly_orders_chart(df):
     """Строит график количества заказов по часам."""
 
@@ -111,6 +137,37 @@ def weekday_orders_chart(df):
     )
 
     fig.update_traces(marker_color="#14B8A6")
+
+    return fig
+
+
+def orders_heatmap(df):
+    """Строит тепловую карту заказов по дням недели и часам."""
+
+    data = orders_by_weekday_and_hour(df)
+    data = data.pivot(index="day_of_week", columns="hour", values="order_id")
+    data = data.reindex(index=list(WEEKDAYS), columns=range(24))
+    data = data.fillna(0).astype(int).rename(index=WEEKDAYS)
+
+    fig = px.imshow(
+        data,
+        aspect="auto",
+        zmin=0,
+        title="Тепловая карта заказов по дням недели и часам",
+        labels={
+            "x": "Час",
+            "y": "День недели",
+            "color": "Заказы",
+        },
+        color_continuous_scale=["#312447", "#8B5CF6", "#DDD6FE"],
+    )
+
+    fig.update_xaxes(dtick=1)
+    fig.update_traces(
+        xgap=1,
+        ygap=1,
+        hovertemplate="%{y}<br>Час: %{x}:00<br>Заказы: %{z}<extra></extra>",
+    )
 
     return fig
 
@@ -184,6 +241,28 @@ def category_sales_chart(df):
             "#8B5CF6",
         ],
     )
+
+    return fig
+
+
+def category_pizzas_chart(df):
+    """Строит график количества проданных пицц по категориям."""
+
+    data = pizzas_by_category(df)
+    data["category"] = data["category"].map(CATEGORIES)
+
+    fig = px.bar(
+        data,
+        x="category",
+        y="quantity",
+        title="Количество проданных пицц по категориям",
+        labels={
+            "category": "Категория",
+            "quantity": "Количество проданных пицц",
+        },
+    )
+
+    fig.update_traces(marker_color="#27AE60")
 
     return fig
 

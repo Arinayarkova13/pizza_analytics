@@ -6,11 +6,14 @@ from utils.analytics import filter_data, calculate_metrics
 from utils.charts import (
     CATEGORIES,
     monthly_sales_chart,
+    daily_sales_chart,
     hourly_orders_chart,
     weekday_orders_chart,
+    orders_heatmap,
     popular_pizzas_chart,
     unpopular_pizzas_chart,
     category_sales_chart,
+    category_pizzas_chart,
     size_sales_chart,
 )
 
@@ -150,11 +153,11 @@ if filtered_df.empty:
 
 
 # Расчет ключевых показателей
-metrics = calculate_metrics(filtered_df)
+metrics = calculate_metrics(filtered_df, start_date, end_date)
 
 st.header("Ключевые показатели")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 
 col1.metric(
     "Общая выручка",
@@ -171,9 +174,21 @@ col3.metric(
     f"{metrics['pizzas']:,}",
 )
 
-col4.metric(
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
     "Средний чек",
     f"${metrics['average_check']:,.2f}",
+)
+col2.metric(
+    "Средняя дневная выручка",
+    f"${metrics['average_daily_revenue']:,.2f}",
+    help="Выручка за выбранный период, деленная на число календарных дней.",
+)
+col3.metric(
+    "Среднее количество пицц в заказе",
+    f"{metrics['average_pizzas_per_order']:,.2f}",
+    help="Количество пицц по выбранным фильтрам, деленное на число заказов.",
 )
 
 st.divider()
@@ -212,6 +227,11 @@ with tab1:
         width="stretch",
     )
 
+    st.plotly_chart(
+        daily_sales_chart(filtered_df, start_date, end_date),
+        width="stretch",
+    )
+
 
 # Вкладка 2. Анализ загрузки
 with tab2:
@@ -225,9 +245,19 @@ with tab2:
         width="stretch",
     )
 
+    st.plotly_chart(
+        orders_heatmap(filtered_df),
+        width="stretch",
+    )
+
 
 # Вкладка 3. Анализ ассортимента
 with tab3:
+    st.plotly_chart(
+        category_pizzas_chart(filtered_df),
+        width="stretch",
+    )
+
     st.plotly_chart(
         popular_pizzas_chart(filtered_df),
         width="stretch",
@@ -257,6 +287,12 @@ with tab4:
         ]
     ].copy()
 
+    # Количество пицц в заказе с учетом фильтров
+    order_quantity = (
+        display_df.groupby("order_id")["quantity"].transform("sum")
+    )
+    display_df.insert(1, "order_quantity", order_quantity)
+
     # Перевод категорий на русский язык
     display_df["category"] = display_df["category"].map(
         CATEGORIES
@@ -274,6 +310,7 @@ with tab4:
             "quantity": "Количество",
             "price": "Цена, $",
             "revenue": "Стоимость позиции, $",
+            "order_quantity": "Пицц в заказе",
         }
     )
 
@@ -283,6 +320,11 @@ with tab4:
         display_df,
         hide_index=True,
         width="stretch",
+        column_config={
+            "Пицц в заказе": st.column_config.NumberColumn(
+                help="Общее количество пицц в заказе по выбранным фильтрам.",
+            ),
+        },
     )
 
     # Подготовка CSV-файла для скачивания
